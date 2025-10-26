@@ -1,5 +1,8 @@
 # Concurrent Custom HashMap 
 
+[![Java Version](https://img.shields.io/badge/Java-18-blue)](https://www.oracle.com/java/)
+[![Tests](https://img.shields.io/badge/Tests-JUnit5-green)](https://junit.org/junit5/)
+
 A custom thread-safe HashMap implementation in Java with modular bucket designs, including lock-free, tree-based, and dynamically resizable buckets. Fully tested with unit tests and performance benchmarks, providing insights into multi-threaded map performance.
 
 ---
@@ -24,6 +27,29 @@ A custom thread-safe HashMap implementation in Java with modular bucket designs,
 - Unit tests with JUnit
 - Performance benchmarking with multi-threaded simulation
 - Optional bucket load visualization in console
+
+---
+
+## Factory Pattern Explanation
+
+The Factory Pattern is used in this project to decouple bucket creation from the map logic.
+Instead of hardcoding a specific bucket type, the map relies on a bucket factory (or Supplier) to create new buckets when needed.
+
+### How it works in this project:
+
+1. ConcurrentCustomMap accepts a Supplier<? extends BucketInterface<K,V>> in its constructor.
+2. Whenever a bucket is required (during initialization or resizing), the map calls this supplier to create a new instance.
+3. The map interacts only with the common interface (BucketInterface<K,V>), so it does not need to know the concrete implementation.
+
+### Benefits:
+
+- Flexibility: Easily switch between bucket types:
+  1. Standard Bucket – linked list with locks for basic concurrency.
+  2. Lock-Free Bucket – uses AtomicReference and CAS operations for non-blocking updates.
+  3. Tree Bucket – uses a balanced tree (TreeMap) for high-collision scenarios.
+- Maintainability: Map operations (put, get, remove) remain unchanged when bucket type changes.
+- Benchmarking: Quickly test performance of different bucket types without rewriting map logic.
+
 
 ---
 ## 📂 Project Structure
@@ -147,4 +173,5 @@ map.remove("two");
 mvn test -Dtest=BenchmarkTest
 ```
 ---
+
 
