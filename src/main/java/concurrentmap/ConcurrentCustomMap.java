@@ -1,47 +1,47 @@
 package concurrentmap;
 
 import utils.HashUtils;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
- * A thread-safe custom HashMap implementation using bucket-level locking.
- * Provides fine-grained concurrency through separate locks for each bucket.
+ * A thread-safe custom HashMap supporting modular bucket implementations.
+ * Delegates all operations to BucketInterface<K,V>.
  *
- * @param <K> Type of key
- * @param <V> Type of value
+ * @param <K> key type
+ * @param <V> value type
  */
 public class ConcurrentCustomMap<K, V> {
 
-    private static final int NUM_BUCKETS = 16; // Default number of buckets
-    private final Bucket<K, V>[] buckets; // Array of buckets
+    private final BucketInterface<K, V>[] buckets;
+    private final int numBuckets;
+    private final Supplier<? extends BucketInterface<K, V>> bucketSupplier;
 
     /**
-     * Constructs a concurrent custom map with default number of buckets.
+     * Constructs a map with the given number of buckets using the provided bucket factory.
+     *
+     * @param numBuckets     number of buckets
+     * @param bucketSupplier factory to create bucket instances
      */
     @SuppressWarnings("unchecked")
-    public ConcurrentCustomMap() {
-        buckets = new Bucket[NUM_BUCKETS];
-        for (int i = 0; i < NUM_BUCKETS; i++) {
-            buckets[i] = new Bucket<>();
+    public ConcurrentCustomMap(int numBuckets, Supplier<? extends BucketInterface<K, V>> bucketSupplier) {
+        this.numBuckets = numBuckets;
+        this.bucketSupplier = bucketSupplier;
+        this.buckets = new BucketInterface[numBuckets];
+        for (int i = 0; i < numBuckets; i++) {
+            buckets[i] = bucketSupplier.get();
         }
     }
 
     /**
      * Computes the bucket index for a given key.
-     * Uses the HashUtils utility for consistent hashing.
-     *
-     * @param key the key to hash
-     * @return index of the corresponding bucket
      */
     private int getBucketIndex(K key) {
-        return HashUtils.getBucketIndex(key, NUM_BUCKETS);
+        return HashUtils.getBucketIndex(key, numBuckets);
     }
 
     /**
-     * Inserts or updates a key-value pair in the map.
-     * Thread-safe due to bucket-level locking.
-     *
-     * @param key   the key to insert
-     * @param value the value to associate
+     * Inserts or updates a key-value pair.
      */
     public void put(K key, V value) {
         int index = getBucketIndex(key);
@@ -49,11 +49,7 @@ public class ConcurrentCustomMap<K, V> {
     }
 
     /**
-     * Retrieves a value for the given key.
-     * Thread-safe due to bucket-level locking.
-     *
-     * @param key the key to retrieve
-     * @return the associated value, or null if not found
+     * Retrieves a value by key.
      */
     public V get(K key) {
         int index = getBucketIndex(key);
@@ -61,11 +57,7 @@ public class ConcurrentCustomMap<K, V> {
     }
 
     /**
-     * Removes a key-value pair from the map.
-     * Thread-safe due to bucket-level locking.
-     *
-     * @param key the key to remove
-     * @return the removed value, or null if not found
+     * Removes a key-value pair.
      */
     public V remove(K key) {
         int index = getBucketIndex(key);
@@ -73,26 +65,40 @@ public class ConcurrentCustomMap<K, V> {
     }
 
     /**
-     * Returns the number of buckets currently in use.
-     *
-     * @return total number of buckets
+     * Returns the number of buckets.
      */
-    public int buckectCount() {
-        return NUM_BUCKETS;
+    public int getCapacity() {
+        return numBuckets;
     }
 
     /**
-     * Returns an array with the current load (number of entries) in each bucket.
-     * Used only for benchmarking or visualization.
-     *
-     * @return int array of bucket loads
+     * Returns the current load (number of entries) per bucket.
+     * Useful for benchmarking or visualization.
      */
     public int[] getBucketLoadDistribution() {
-        int[] loads = new int[NUM_BUCKETS];
-        for (int i = 0; i < NUM_BUCKETS; i++) {
-            loads[i] = buckets[i].size(); // size() should be implemented in Bucket
+        int[] loads = new int[numBuckets];
+        for (int i = 0; i < numBuckets; i++) {
+            loads[i] = buckets[i].size();
         }
         return loads;
     }
 
+    /**
+     * Returns all entries in the map as a list.
+     * Useful for rehashing during resize.
+     */
+    public List<Entry<K, V>> entrySet() {
+        List<Entry<K, V>> entries = new java.util.ArrayList<>();
+        for (BucketInterface<K, V> bucket : buckets) {
+            entries.addAll(bucket.getEntries());
+        }
+        return entries;
+    }
+
+    /**
+     * Returns the supplier used to create new buckets.
+     */
+    public Supplier<? extends BucketInterface<K, V>> getBucketType() {
+        return bucketSupplier;
+    }
 }

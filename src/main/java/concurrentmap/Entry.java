@@ -31,4 +31,31 @@ public class Entry<K, V> {
     public boolean keyEquals(K otherKey) {
         return key == null ? otherKey == null : key.equals(otherKey);
     }
+
+    /**
+     * Returns the key of this entry.
+     *
+     * @return the key
+     */
+    public K getKey() {
+        return key;
+    }
+
+    /**
+     * Returns the value of this entry.
+     *
+     * @return the value
+     */
+    public V getValue() {
+        return value;
+    }
+
+    /**
+     * Sets the value of this entry.
+     *
+     * @param value new value
+     */
+    public void setValue(V value) {
+        this.value = value;
+    }
 }
