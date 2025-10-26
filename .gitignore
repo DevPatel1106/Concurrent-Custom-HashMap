@@ -1,0 +1,14 @@
+.idea/
+/*.iml
+*.ipr
+*.iws
+.vscode/
+.github/
+/target/
+/build/
+/out/
+.mvn/
+*.log
+*.tmp
+/*.properties
+/*.env
