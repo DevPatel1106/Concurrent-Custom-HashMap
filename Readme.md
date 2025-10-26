@@ -1,4 +1,4 @@
-# ConcurrentCustomMap
+# Concurrent Custom HashMap 
 
 A custom thread-safe HashMap implementation in Java with modular bucket designs, including lock-free, tree-based, and dynamically resizable buckets. Fully tested with unit tests and performance benchmarks, providing insights into multi-threaded map performance.
 
@@ -147,3 +147,4 @@ map.remove("two");
 mvn test -Dtest=BenchmarkTest
 ```
 ---
+
